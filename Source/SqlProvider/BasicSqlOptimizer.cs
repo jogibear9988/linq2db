@@ -1,4 +1,5 @@
 ﻿using System;
+using LinqToDB.Linq;
 
 namespace LinqToDB.SqlProvider
 {
@@ -23,7 +24,7 @@ namespace LinqToDB.SqlProvider
 
 		#region ISqlOptimizer Members
 
-		public virtual SelectQuery Finalize(SelectQuery selectQuery)
+		public virtual SelectQuery Finalize(SelectQuery selectQuery, LinqConfiguration linqConfiguration)
 		{
 			new SelectQueryOptimizer(SqlProviderFlags, selectQuery).FinalizeAndValidate(
 				SqlProviderFlags.IsApplyJoinSupported,
@@ -37,7 +38,7 @@ namespace LinqToDB.SqlProvider
 					SqlProviderFlags.IsApplyJoinSupported,
 					SqlProviderFlags.IsGroupByExpressionSupported);
 
-			if (Common.Configuration.Linq.OptimizeJoins)
+			if (linqConfiguration.OptimizeJoins)
 				selectQuery = OptimizeJoins(selectQuery);
 
 			return selectQuery;

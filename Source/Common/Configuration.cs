@@ -1,10 +1,18 @@
 using System;
+using LinqToDB.Linq;
 
 namespace LinqToDB.Common
 {
 	public static class Configuration
 	{
+		/// <summary>
+		/// Use Property of Mapping Schema instead
+		/// </summary>
 		public static bool IsStructIsScalarType = true;
+
+		/// <summary>
+		/// Use Property of Mapping Schema instead
+		/// </summary>
 		public static bool AvoidSpecificDataProviderAPI;
 
 		public static class Linq

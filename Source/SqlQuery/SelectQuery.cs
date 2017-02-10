@@ -20,7 +20,6 @@ namespace LinqToDB.SqlQuery
 		public SelectQuery()
 		{
 			SourceID = Interlocked.Increment(ref SourceIDCounter);
-
 			_select  = new SelectClause (this);
 			_from    = new FromClause   (this);
 			_where   = new WhereClause  (this);

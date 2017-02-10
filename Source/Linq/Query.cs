@@ -66,15 +66,18 @@ namespace LinqToDB.Linq
 		}
 
 		#endregion
+
+		public LinqConfiguration LinqConfiguration;
 	}
 
 	class Query<T> : Query
 	{
 		#region Init
 
-		public Query()
+		public Query(LinqConfiguration linqConfiguration)
 		{
 			GetIEnumerable = MakeEnumerable;
+			LinqConfiguration = linqConfiguration;
 		}
 
 		public override void Init(IBuildContext parseContext, List<ParameterAccessor> sqlParameters)
@@ -125,7 +128,7 @@ namespace LinqToDB.Linq
 
 		const int CacheSize = 100;
 
-		public static Query<T> GetQuery(IDataContextInfo dataContextInfo, Expression expr)
+		public static Query<T> GetQuery(IDataContextInfo dataContextInfo, Expression expr, LinqConfiguration linqConfiguration)
 		{
 			var query = FindQuery(dataContextInfo, expr);
 
@@ -149,7 +152,7 @@ namespace LinqToDB.Linq
 
 						try
 						{
-							query = new ExpressionBuilder(new Query<T>(), dataContextInfo, expr, null).Build<T>();
+							query = new ExpressionBuilder(new Query<T>(linqConfiguration), dataContextInfo, expr, null).Build<T>();
 						}
 						catch (Exception)
 						{
@@ -219,7 +222,7 @@ namespace LinqToDB.Linq
 		{
 			foreach (var sql in Queries)
 			{
-				sql.SelectQuery = SqlOptimizer.Finalize(sql.SelectQuery);
+				sql.SelectQuery = SqlOptimizer.Finalize(sql.SelectQuery, this.LinqConfiguration);
 				sql.Parameters  = sql.Parameters
 					.Select (p => new { p, idx = sql.SelectQuery.Parameters.IndexOf(p.SqlParameter) })
 					.OrderBy(p => p.idx)
@@ -1146,7 +1149,7 @@ namespace LinqToDB.Linq
 
 			ClearParameters();
 
-			GetIEnumerable = (ctx,db,expr,ps) => Map(query(db, expr, ps, 0), ctx, db, expr, ps, mapInfo);
+			GetIEnumerable = (ctx,db,expr,ps) => Map(query(db, expr, ps, 0), ctx, db, expr, ps, mapInfo, LinqConfiguration);
 		}
 
 		class MapInfo
@@ -1162,14 +1165,15 @@ namespace LinqToDB.Linq
 			IDataContextInfo         dataContextInfo,
 			Expression               expr,
 			object[]                 ps,
-			MapInfo                  mapInfo)
+			MapInfo                  mapInfo,
+			LinqConfiguration        linqConfiguration)
 		{
 			var closeQueryContext = false;
 
 			if (queryContext == null)
 			{
 				closeQueryContext = true;
-				queryContext = new QueryContext(dataContextInfo, expr, ps);
+				queryContext = new QueryContext(dataContextInfo, expr, ps, linqConfiguration);
 			}
 
 			var isFaulted = false;
@@ -1234,7 +1238,7 @@ namespace LinqToDB.Linq
 
 			ClearParameters();
 
-			GetIEnumerable = (ctx,db,expr,ps) => Map(query(db, expr, ps, 0), ctx, db, expr, ps, mapInfo);
+			GetIEnumerable = (ctx,db,expr,ps) => Map(query(db, expr, ps, 0), ctx, db, expr, ps, mapInfo, LinqConfiguration);
 		}
 
 		class MapInfo2
@@ -1249,10 +1253,11 @@ namespace LinqToDB.Linq
 			IDataContextInfo         dataContextInfo,
 			Expression               expr,
 			object[]                 ps,
-			MapInfo2                 mapInfo)
+			MapInfo2                 mapInfo,
+			LinqConfiguration        linqConfiguration)
 		{
 			if (queryContext == null)
-				queryContext = new QueryContext(dataContextInfo, expr, ps);
+				queryContext = new QueryContext(dataContextInfo, expr, ps, linqConfiguration);
 
 			var counter   = 0;
 			var isFaulted = false;

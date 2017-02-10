@@ -15,7 +15,7 @@ namespace Tests.Linq
 		[Test, DataContextSource]
 		public void Simple1(string context)
 		{
-			LinqToDB.Common.Configuration.Linq.PreloadGroups = true;
+			//LinqToDB.Common.Configuration.Linq.PreloadGroups = true;
 
 			using (var db = GetDataContext(context))
 			{
@@ -24,7 +24,7 @@ namespace Tests.Linq
 				var q =
 					from ch in db.Child
 					group ch by ch.ParentID;
-
+				q = q.WithPreloadGroups();
 				var list = q.ToList().Where(n => n.Key < 6).OrderBy(n => n.Key).ToList();
 
 				Assert.AreEqual(4, list.Count);
@@ -45,7 +45,7 @@ namespace Tests.Linq
 		[Test, DataContextSource]
 		public void Simple2(string context)
 		{
-			LinqToDB.Common.Configuration.Linq.PreloadGroups = false;
+			//LinqToDB.Common.Configuration.Linq.PreloadGroups = false;
 
 			using (var db = GetDataContext(context))
 			{

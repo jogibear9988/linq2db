@@ -1,4 +1,5 @@
 ﻿using System;
+using LinqToDB.Linq;
 
 namespace LinqToDB.DataProvider.Oracle
 {
@@ -12,7 +13,7 @@ namespace LinqToDB.DataProvider.Oracle
 		{
 		}
 
-		public override SelectQuery Finalize(SelectQuery selectQuery)
+		public override SelectQuery Finalize(SelectQuery selectQuery, LinqConfiguration linqConfiguration)
 		{
 			CheckAliases(selectQuery, 30);
 
@@ -22,7 +23,7 @@ namespace LinqToDB.DataProvider.Oracle
 					((SqlParameter)element).IsQueryParameter = false;
 			});
 
-			selectQuery = base.Finalize(selectQuery);
+			selectQuery = base.Finalize(selectQuery, linqConfiguration);
 
 			switch (selectQuery.QueryType)
 			{

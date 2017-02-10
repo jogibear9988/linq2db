@@ -39,7 +39,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			SetCharField("char",  (r,i) => r.GetString(i).TrimEnd());
 			SetCharField("nchar", (r,i) => r.GetString(i).TrimEnd());
 
-			if (!Configuration.AvoidSpecificDataProviderAPI)
+			if (!MappingSchema.AvoidSpecificDataProviderAPI)
 			{
 				SetProviderField<SqlDataReader,SqlBinary  ,SqlBinary  >((r,i) => r.GetSqlBinary  (i));
 				SetProviderField<SqlDataReader,SqlBoolean ,SqlBoolean >((r,i) => r.GetSqlBoolean (i));

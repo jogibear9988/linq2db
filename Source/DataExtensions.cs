@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
@@ -314,5 +315,15 @@ namespace LinqToDB
 		}
 
 		#endregion
+
+		public static IQueryable<T> WithPreloadGroups<T>(this IQueryable<T> q, bool preload = true)
+		{
+			var eq = q as ExpressionQuery<T>;
+			if (eq != null)
+			{
+				eq.LinqConfiguration.PreloadGroups = preload;
+			}
+			return q;
+		}
 	}
 }

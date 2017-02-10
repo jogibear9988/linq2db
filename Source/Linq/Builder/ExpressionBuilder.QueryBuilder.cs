@@ -511,7 +511,7 @@ namespace LinqToDB.Linq.Builder
 
 		static Expression GetMultipleQueryExpression(IBuildContext context, MappingSchema mappringSchema, Expression expression, HashSet<ParameterExpression> parameters)
 		{
-			if (!Common.Configuration.Linq.AllowMultipleQuery)
+			if (!context.Builder._query.LinqConfiguration.AllowMultipleQuery)
 				throw new LinqException("Multiple queries are not allowed. Set the 'LinqToDB.Common.Configuration.Linq.AllowMultipleQuery' flag to 'true' to allow multiple queries.");
 
 			expression.Visit(e =>

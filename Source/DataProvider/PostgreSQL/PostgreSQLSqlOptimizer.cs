@@ -1,4 +1,5 @@
 ﻿using System;
+using LinqToDB.Linq;
 
 namespace LinqToDB.DataProvider.PostgreSQL
 {
@@ -12,11 +13,11 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		{
 		}
 
-		public override SelectQuery Finalize(SelectQuery selectQuery)
+		public override SelectQuery Finalize(SelectQuery selectQuery, LinqConfiguration linqConfiguration)
 		{
 			CheckAliases(selectQuery, int.MaxValue);
 
-			selectQuery = base.Finalize(selectQuery);
+			selectQuery = base.Finalize(selectQuery, linqConfiguration);
 
 			switch (selectQuery.QueryType)
 			{

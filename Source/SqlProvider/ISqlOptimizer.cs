@@ -1,4 +1,5 @@
 ﻿using System;
+using LinqToDB.Linq;
 
 namespace LinqToDB.SqlProvider
 {
@@ -6,7 +7,7 @@ namespace LinqToDB.SqlProvider
 
 	public interface ISqlOptimizer
 	{
-		SelectQuery    Finalize         (SelectQuery selectQuery);
+		SelectQuery    Finalize         (SelectQuery selectQuery, LinqConfiguration linqConfiguration);
 		ISqlExpression ConvertExpression(ISqlExpression expression);
 		ISqlPredicate  ConvertPredicate (SelectQuery selectQuery, ISqlPredicate  predicate);
 	}

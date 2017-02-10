@@ -1,4 +1,5 @@
 ﻿using System;
+using LinqToDB.Linq;
 
 namespace LinqToDB.DataProvider.DB2
 {
@@ -18,11 +19,11 @@ namespace LinqToDB.DataProvider.DB2
 				((SqlParameter)element).IsQueryParameter = false;
 		}
 
-		public override SelectQuery Finalize(SelectQuery selectQuery)
+		public override SelectQuery Finalize(SelectQuery selectQuery, LinqConfiguration linqConfiguration)
 		{
 			new QueryVisitor().Visit(selectQuery.Select, SetQueryParameter);
 
-			selectQuery = base.Finalize(selectQuery);
+			selectQuery = base.Finalize(selectQuery, linqConfiguration);
 
 			switch (selectQuery.QueryType)
 			{

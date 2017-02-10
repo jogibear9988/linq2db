@@ -12,17 +12,19 @@ namespace LinqToDB.Linq
 			public bool             InUse;
 		}
 
-		public QueryContext(IDataContextInfo dataContext, Expression expr, object[] compiledParameters)
+		public QueryContext(IDataContextInfo dataContext, Expression expr, object[] compiledParameters, LinqConfiguration linqConfiguration)
 		{
 			RootDataContext    = dataContext;
 			Expression         = expr;
 			CompiledParameters = compiledParameters;
+			LinqConfiguration  = linqConfiguration;
 		}
 
-		public IDataContextInfo RootDataContext;
-		public Expression       Expression;
-		public object[]         CompiledParameters;
-		public int              Counter;
+		public IDataContextInfo  RootDataContext;
+		public Expression        Expression;
+		public object[]          CompiledParameters;
+		public int               Counter;
+		public LinqConfiguration LinqConfiguration;
 
 		List<DataContextContext> _contexts;
 

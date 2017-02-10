@@ -33,7 +33,7 @@ namespace LinqToDB.DataProvider.Informix
 			SetCharField("CHAR",  (r,i) => r.GetString(i).TrimEnd());
 			SetCharField("NCHAR", (r,i) => r.GetString(i).TrimEnd());
 
-			if (!Configuration.AvoidSpecificDataProviderAPI)
+			if (!mappingSchema.AvoidSpecificDataProviderAPI)
 			{
 				SetProviderField<IDataReader,float,  float  >((r,i) => GetFloat  (r, i));
 				SetProviderField<IDataReader,double, double >((r,i) => GetDouble (r, i));
@@ -114,7 +114,7 @@ namespace LinqToDB.DataProvider.Informix
 			_ifxDateTime = connectionType.AssemblyEx().GetType("IBM.Data.Informix.IfxDateTime", true);
 			_ifxTimeSpan = connectionType.AssemblyEx().GetType("IBM.Data.Informix.IfxTimeSpan", true);
 
-			if (!Configuration.AvoidSpecificDataProviderAPI)
+			if (!MappingSchema.AvoidSpecificDataProviderAPI)
 			{
 				SetField(typeof(Int64), "BIGINT", "GetBigInt");
 

@@ -1,4 +1,5 @@
 ﻿using System;
+using LinqToDB.Linq;
 
 namespace LinqToDB.DataProvider.SQLite
 {
@@ -13,14 +14,14 @@ namespace LinqToDB.DataProvider.SQLite
 		{
 		}
 
-		public override SelectQuery Finalize(SelectQuery selectQuery)
+		public override SelectQuery Finalize(SelectQuery selectQuery, LinqConfiguration linqConfiguration)
 		{
-			selectQuery = base.Finalize(selectQuery);
+			selectQuery = base.Finalize(selectQuery, linqConfiguration);
 
 			switch (selectQuery.QueryType)
 			{
 				case QueryType.Delete :
-					selectQuery = GetAlternativeDelete(base.Finalize(selectQuery));
+					selectQuery = GetAlternativeDelete(base.Finalize(selectQuery, linqConfiguration));
 					selectQuery.From.Tables[0].Alias = "$";
 					break;
 

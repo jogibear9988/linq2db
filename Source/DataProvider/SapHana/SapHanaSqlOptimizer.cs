@@ -1,4 +1,5 @@
 ﻿using System;
+using LinqToDB.Linq;
 
 namespace LinqToDB.DataProvider.SapHana
 {
@@ -13,9 +14,9 @@ namespace LinqToDB.DataProvider.SapHana
 
 		}
 
-		public override SelectQuery Finalize(SelectQuery selectQuery)
+		public override SelectQuery Finalize(SelectQuery selectQuery, LinqConfiguration linqConfiguration)
 		{
-			selectQuery = base.Finalize(selectQuery);
+			selectQuery = base.Finalize(selectQuery, linqConfiguration);
 
 			switch (selectQuery.QueryType)
 			{

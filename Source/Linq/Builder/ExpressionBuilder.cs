@@ -106,7 +106,7 @@ namespace LinqToDB.Linq.Builder
 			Expression           = ConvertExpressionTree(expression);
 			_visitedExpressions  = null;
 
-			if (Configuration.AvoidSpecificDataProviderAPI)
+			if (MappingSchema.AvoidSpecificDataProviderAPI)
 			{
 				DataReaderLocal = DataReaderParam;
 			}

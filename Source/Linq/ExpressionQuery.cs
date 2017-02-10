@@ -14,6 +14,11 @@ namespace LinqToDB.Linq
 
 	abstract class ExpressionQuery<T> : IExpressionQuery<T>
 	{
+		public ExpressionQuery()
+		{
+			this.LinqConfiguration = new LinqConfiguration();
+		}
+
 		#region Init
 
 		protected void Init(IDataContextInfo dataContextInfo, Expression expression)
@@ -80,14 +85,16 @@ namespace LinqToDB.Linq
 		{
 			if (cache && Info != null)
 				return Info;
-
-			var info = Query<T>.GetQuery(DataContextInfo, expression);
+			
+			var info = Query<T>.GetQuery(DataContextInfo, expression, LinqConfiguration);
 
 			if (cache)
 				Info = info;
 
 			return info;
 		}
+
+		internal LinqConfiguration LinqConfiguration;
 
 		#endregion
 

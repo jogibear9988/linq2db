@@ -786,7 +786,7 @@ namespace LinqToDB.Mapping
 			{
 				type = type.ToNullableUnderlying();
 
-				if (type.IsEnumEx() || type.IsPrimitiveEx() || (Configuration.IsStructIsScalarType && type.IsValueTypeEx()))
+				if (type.IsEnumEx() || type.IsPrimitiveEx() || (this.IsStructIsScalarType && type.IsValueTypeEx()))
 					ret = true;
 			}
 
@@ -1039,5 +1039,19 @@ namespace LinqToDB.Mapping
 
 		#endregion
 
+		
+		private bool? _isStructIsScalarType;
+		public bool IsStructIsScalarType
+		{
+			get { return _isStructIsScalarType ?? Configuration.IsStructIsScalarType; }
+			set { _isStructIsScalarType = value; }
+		}
+
+		private bool? _avoidSpecificDataProviderAPI;
+		public bool AvoidSpecificDataProviderAPI
+		{
+			get { return _avoidSpecificDataProviderAPI ?? Configuration.AvoidSpecificDataProviderAPI; }
+			set { _avoidSpecificDataProviderAPI = value; }
+		}
 	}
 }

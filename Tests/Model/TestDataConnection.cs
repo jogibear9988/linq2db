@@ -6,6 +6,7 @@ using System.Text;
 
 using LinqToDB;
 using LinqToDB.Data;
+using LinqToDB.Linq;
 using LinqToDB.SqlQuery;
 
 namespace Tests.Model
@@ -66,7 +67,7 @@ namespace Tests.Model
 
 			//provider.SqlQuery = sql;
 
-			query = optimizer.Finalize(query);
+			query = optimizer.Finalize(query, new LinqConfiguration());
 
 			var cc = provider.CommandCount(query);
 			var sb = new StringBuilder();

@@ -156,7 +156,7 @@ namespace LinqToDB.Linq.Builder
 					_parameters   = parameters;
 					_itemReader   = itemReader;
 
-					if (Configuration.Linq.PreloadGroups)
+					if ((this._queryContext.LinqConfiguration != null && this._queryContext.LinqConfiguration.PreloadGroups == true) || Configuration.Linq.PreloadGroups)
 					{
 						_items = GetItems();
 					}
@@ -261,7 +261,7 @@ namespace LinqToDB.Linq.Builder
 					var keyExpr         = context._key.BuildExpression(null, 0);
 					var dataReaderLocal = context.Builder.DataReaderLocal;
 
-					if (!Configuration.AvoidSpecificDataProviderAPI && keyExpr.Find(e => e == dataReaderLocal) != null)
+					if (!context.Builder.MappingSchema.AvoidSpecificDataProviderAPI && keyExpr.Find(e => e == dataReaderLocal) != null)
 					{
 						keyExpr = Expression.Block(
 							new[] { context.Builder.DataReaderLocal },

@@ -1,4 +1,5 @@
 ﻿using System;
+using LinqToDB.Linq;
 
 namespace LinqToDB.DataProvider.Firebird
 {
@@ -44,7 +45,7 @@ namespace LinqToDB.DataProvider.Firebird
 			return true;
 		}
 
-		public override SelectQuery Finalize(SelectQuery selectQuery)
+		public override SelectQuery Finalize(SelectQuery selectQuery, LinqConfiguration linqConfiguration)
 		{
 			CheckAliases(selectQuery, int.MaxValue);
 
@@ -62,7 +63,7 @@ namespace LinqToDB.DataProvider.Firebird
 					new QueryVisitor().Visit(key.Expression, SetNonQueryParameter);
 			}
 
-			selectQuery = base.Finalize(selectQuery);
+			selectQuery = base.Finalize(selectQuery, linqConfiguration);
 
 			switch (selectQuery.QueryType)
 			{
