@@ -471,6 +471,9 @@ namespace LinqToDB.Internal.DataProvider
 		public virtual IQueryParametersNormalizer GetQueryParameterNormalizer() => new UniqueParametersNormalizer();
 
 		protected abstract IMemberTranslator  CreateMemberTranslator();
+		protected virtual IUnaryTranslator? CreateUnaryTranslator() => null;
+		protected virtual IBinaryTranslator? CreateBinaryTranslator() => null;
+
 		protected virtual  IMemberConverter   CreateMemberConverter()   => new LegacyMemberConverterBase();
 		protected virtual  IIdentifierService CreateIdentifierService() => new IdentifierServiceSimple(128);
 
@@ -491,6 +494,14 @@ namespace LinqToDB.Internal.DataProvider
 			var dmlService = CreateDmlService();
 			if (dmlService != null)
 				serviceProvider.AddService(dmlService);
+
+			var unary = CreateUnaryTranslator();
+			if (unary != null)
+				serviceProvider.AddService(unary);
+
+			var binary = CreateBinaryTranslator();
+			if (binary != null)
+				serviceProvider.AddService(binary);
 		}
 
 		readonly Lock _guard = new();
