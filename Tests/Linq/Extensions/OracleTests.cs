@@ -955,6 +955,21 @@ namespace Tests.Extensions
 		}
 
 		[Test]
+		public void AsOfTimestampWithDateTimeOffsetTest([IncludeDataSources(true, TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var timestamp = DateTimeOffset.UtcNow;
+			var q =
+				from p in db.Parent.AsOracle().AsOfTimestamp(timestamp)
+				select p;
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring(" AS OF TIMESTAMP "));
+		}
+
+		[Test]
 		public void AsOfSCNTest([IncludeDataSources(true, TestProvName.AllOracle)] string context)
 		{
 			using var db = GetDataContext(context);

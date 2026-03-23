@@ -642,6 +642,10 @@ namespace LinqToDB.DataProvider.Oracle
 				{
 					sqlBuilder.BuildExpression(stringBuilder, timestamp, buildTableName: false);
 				}
+				else if (sqlQueryExtension.Arguments.TryGetValue("timestampOffset", out var timestampOffset))
+				{
+					sqlBuilder.BuildExpression(stringBuilder, timestampOffset, buildTableName: false);
+				}
 				else if (sqlQueryExtension.Arguments.TryGetValue("scn", out var scn))
 				{
 					sqlBuilder.BuildExpression(stringBuilder, scn, buildTableName: false);
@@ -687,11 +691,34 @@ namespace LinqToDB.DataProvider.Oracle
 			return new OracleSpecificTable<TSource>(newTable);
 		}
 
+		[LinqTunnel, Pure, IsQueryable]
+		[Sql.QueryExtension(ProviderName.Oracle, Sql.QueryExtensionScope.TableNameHint, typeof(FlashbackQueryExtensionBuilder))]
+		[Sql.QueryExtension(null,                Sql.QueryExtensionScope.None,          typeof(NoneExtensionBuilder))]
+		internal static IOracleSpecificTable<TSource> FlashbackQueryHint<TSource>(
+			this                IOracleSpecificTable<TSource> table,
+			[SqlQueryDependent] string                        queryType,
+			                    DateTimeOffset                timestampOffset)
+			where TSource : notnull
+		{
+			var newTable = new Table<TSource>(table.DataContext,
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(FlashbackQueryHint, table, queryType, timestampOffset),
+					table.Expression, Expression.Constant(queryType), Expression.Constant(timestampOffset))
+			);
+
+			return new OracleSpecificTable<TSource>(newTable);
+		}
+
 		/// <summary>
 		/// Adds Oracle Flashback Query AS OF TIMESTAMP clause.
 		/// <para>
 		/// Oracle Flashback Query allows you to view the contents of a table as it existed at a specific point in time.
 		/// See: https://docs.oracle.com/en/database/oracle/oracle-database/21/adfns/flashback.html
+		/// </para>
+		/// <para>
+		/// This overload accepts DateTime and will use the session's timezone for interpretation.
+		/// For explicit timezone control, use the DateTimeOffset overload.
 		/// </para>
 		/// <example>
 		/// <code>
@@ -706,7 +733,7 @@ namespace LinqToDB.DataProvider.Oracle
 		/// </summary>
 		/// <typeparam name="TSource">Table record mapping class.</typeparam>
 		/// <param name="table">Table-like query source.</param>
-		/// <param name="timestamp">The timestamp to query as of.</param>
+		/// <param name="timestamp">The timestamp to query as of. Will be interpreted based on session timezone.</param>
 		/// <returns>Table-like query source with AS OF TIMESTAMP clause.</returns>
 		[ExpressionMethod(nameof(AsOfTimestampImpl))]
 		public static IOracleSpecificTable<TSource> AsOfTimestamp<TSource>(this IOracleSpecificTable<TSource> table, DateTime timestamp)
@@ -715,6 +742,43 @@ namespace LinqToDB.DataProvider.Oracle
 			return table.FlashbackQueryHint("TIMESTAMP", timestamp);
 		}
 		static Expression<Func<IOracleSpecificTable<TSource>,DateTime,IOracleSpecificTable<TSource>>> AsOfTimestampImpl<TSource>()
+			where TSource : notnull
+		{
+			return (table, timestamp) => table.FlashbackQueryHint("TIMESTAMP", timestamp);
+		}
+
+		/// <summary>
+		/// Adds Oracle Flashback Query AS OF TIMESTAMP clause with timezone information.
+		/// <para>
+		/// Oracle Flashback Query allows you to view the contents of a table as it existed at a specific point in time.
+		/// See: https://docs.oracle.com/en/database/oracle/oracle-database/21/adfns/flashback.html
+		/// </para>
+		/// <para>
+		/// This overload accepts DateTimeOffset which preserves timezone information, ensuring consistent
+		/// behavior regardless of the database session's timezone setting.
+		/// </para>
+		/// <example>
+		/// <code>
+		/// var timestamp = DateTimeOffset.UtcNow.AddMinutes(-5);
+		/// var query = from p in db.GetTable&lt;Product&gt;()
+		///                 .AsOracle()
+		///                 .AsOfTimestamp(timestamp)
+		///             select p;
+		/// </code>
+		/// Generates SQL: SELECT * FROM Product AS OF TIMESTAMP :timestamp
+		/// </example>
+		/// </summary>
+		/// <typeparam name="TSource">Table record mapping class.</typeparam>
+		/// <param name="table">Table-like query source.</param>
+		/// <param name="timestamp">The timestamp with timezone to query as of.</param>
+		/// <returns>Table-like query source with AS OF TIMESTAMP clause.</returns>
+		[ExpressionMethod(nameof(AsOfTimestampOffsetImpl))]
+		public static IOracleSpecificTable<TSource> AsOfTimestamp<TSource>(this IOracleSpecificTable<TSource> table, DateTimeOffset timestamp)
+			where TSource : notnull
+		{
+			return table.FlashbackQueryHint("TIMESTAMP", timestamp);
+		}
+		static Expression<Func<IOracleSpecificTable<TSource>,DateTimeOffset,IOracleSpecificTable<TSource>>> AsOfTimestampOffsetImpl<TSource>()
 			where TSource : notnull
 		{
 			return (table, timestamp) => table.FlashbackQueryHint("TIMESTAMP", timestamp);
