@@ -2,6 +2,7 @@
 using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Text;
 
 using JetBrains.Annotations;
 
@@ -9,6 +10,7 @@ using LinqToDB.Internal.DataProvider;
 using LinqToDB.Internal.DataProvider.Oracle;
 using LinqToDB.Internal.Linq;
 using LinqToDB.Internal.SqlProvider;
+using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
 
@@ -619,6 +621,136 @@ namespace LinqToDB.DataProvider.Oracle
 					currentSource.Expression,
 					Expression.Constant(hint),
 					Expression.NewArrayInit(typeof(TParam), hintParameters.Select(p => Expression.Constant(p))))));
+		}
+
+		#endregion
+
+		#region FlashbackQuery
+
+		sealed class FlashbackQueryExtensionBuilder : ISqlQueryExtensionBuilder
+		{
+			public void Build(NullabilityContext nullability, ISqlBuilder sqlBuilder, StringBuilder stringBuilder, SqlQueryExtension sqlQueryExtension)
+			{
+				var queryType = (string)((SqlValue)sqlQueryExtension.Arguments["queryType"]).Value!;
+
+				stringBuilder
+					.Append(" AS OF ")
+					.Append(queryType)
+					.Append(' ');
+
+				if (sqlQueryExtension.Arguments.TryGetValue("timestamp", out var timestamp))
+				{
+					sqlBuilder.BuildExpression(stringBuilder, timestamp, buildTableName: false);
+				}
+				else if (sqlQueryExtension.Arguments.TryGetValue("scn", out var scn))
+				{
+					sqlBuilder.BuildExpression(stringBuilder, scn, buildTableName: false);
+				}
+			}
+		}
+
+		[LinqTunnel, Pure, IsQueryable]
+		[Sql.QueryExtension(ProviderName.Oracle, Sql.QueryExtensionScope.TableNameHint, typeof(FlashbackQueryExtensionBuilder))]
+		[Sql.QueryExtension(null,                Sql.QueryExtensionScope.None,          typeof(NoneExtensionBuilder))]
+		internal static IOracleSpecificTable<TSource> FlashbackQueryHint<TSource>(
+			this                IOracleSpecificTable<TSource> table,
+			[SqlQueryDependent] string                        queryType,
+			                    DateTime                      timestamp)
+			where TSource : notnull
+		{
+			var newTable = new Table<TSource>(table.DataContext,
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(FlashbackQueryHint, table, queryType, timestamp),
+					table.Expression, Expression.Constant(queryType), Expression.Constant(timestamp))
+			);
+
+			return new OracleSpecificTable<TSource>(newTable);
+		}
+
+		[LinqTunnel, Pure, IsQueryable]
+		[Sql.QueryExtension(ProviderName.Oracle, Sql.QueryExtensionScope.TableNameHint, typeof(FlashbackQueryExtensionBuilder))]
+		[Sql.QueryExtension(null,                Sql.QueryExtensionScope.None,          typeof(NoneExtensionBuilder))]
+		internal static IOracleSpecificTable<TSource> FlashbackQueryHint<TSource>(
+			this                IOracleSpecificTable<TSource> table,
+			[SqlQueryDependent] string                        queryType,
+			                    long                          scn)
+			where TSource : notnull
+		{
+			var newTable = new Table<TSource>(table.DataContext,
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(FlashbackQueryHint, table, queryType, scn),
+					table.Expression, Expression.Constant(queryType), Expression.Constant(scn))
+			);
+
+			return new OracleSpecificTable<TSource>(newTable);
+		}
+
+		/// <summary>
+		/// Adds Oracle Flashback Query AS OF TIMESTAMP clause.
+		/// <para>
+		/// Oracle Flashback Query allows you to view the contents of a table as it existed at a specific point in time.
+		/// See: https://docs.oracle.com/en/database/oracle/oracle-database/21/adfns/flashback.html
+		/// </para>
+		/// <example>
+		/// <code>
+		/// var timestamp = DateTime.UtcNow.AddMinutes(-5);
+		/// var query = from p in db.GetTable&lt;Product&gt;()
+		///                 .AsOracle()
+		///                 .AsOfTimestamp(timestamp)
+		///             select p;
+		/// </code>
+		/// Generates SQL: SELECT * FROM Product AS OF TIMESTAMP :timestamp
+		/// </example>
+		/// </summary>
+		/// <typeparam name="TSource">Table record mapping class.</typeparam>
+		/// <param name="table">Table-like query source.</param>
+		/// <param name="timestamp">The timestamp to query as of.</param>
+		/// <returns>Table-like query source with AS OF TIMESTAMP clause.</returns>
+		[ExpressionMethod(nameof(AsOfTimestampImpl))]
+		public static IOracleSpecificTable<TSource> AsOfTimestamp<TSource>(this IOracleSpecificTable<TSource> table, DateTime timestamp)
+			where TSource : notnull
+		{
+			return table.FlashbackQueryHint("TIMESTAMP", timestamp);
+		}
+		static Expression<Func<IOracleSpecificTable<TSource>,DateTime,IOracleSpecificTable<TSource>>> AsOfTimestampImpl<TSource>()
+			where TSource : notnull
+		{
+			return (table, timestamp) => table.FlashbackQueryHint("TIMESTAMP", timestamp);
+		}
+
+		/// <summary>
+		/// Adds Oracle Flashback Query AS OF SCN (System Change Number) clause.
+		/// <para>
+		/// Oracle Flashback Query allows you to view the contents of a table as it existed at a specific SCN.
+		/// See: https://docs.oracle.com/en/database/oracle/oracle-database/21/adfns/flashback.html
+		/// </para>
+		/// <example>
+		/// <code>
+		/// long scn = 1234567;
+		/// var query = from p in db.GetTable&lt;Product&gt;()
+		///                 .AsOracle()
+		///                 .AsOfSCN(scn)
+		///             select p;
+		/// </code>
+		/// Generates SQL: SELECT * FROM Product AS OF SCN :scn
+		/// </example>
+		/// </summary>
+		/// <typeparam name="TSource">Table record mapping class.</typeparam>
+		/// <param name="table">Table-like query source.</param>
+		/// <param name="scn">The System Change Number to query as of.</param>
+		/// <returns>Table-like query source with AS OF SCN clause.</returns>
+		[ExpressionMethod(nameof(AsOfSCNImpl))]
+		public static IOracleSpecificTable<TSource> AsOfSCN<TSource>(this IOracleSpecificTable<TSource> table, long scn)
+			where TSource : notnull
+		{
+			return table.FlashbackQueryHint("SCN", scn);
+		}
+		static Expression<Func<IOracleSpecificTable<TSource>,long,IOracleSpecificTable<TSource>>> AsOfSCNImpl<TSource>()
+			where TSource : notnull
+		{
+			return (table, scn) => table.FlashbackQueryHint("SCN", scn);
 		}
 
 		#endregion

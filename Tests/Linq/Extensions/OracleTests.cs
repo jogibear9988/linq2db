@@ -936,5 +936,56 @@ namespace Tests.Extensions
 		}
 
 		#endregion
+
+		#region Flashback Query Tests
+
+		[Test]
+		public void AsOfTimestampTest([IncludeDataSources(true, TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var timestamp = DateTime.Now;
+			var q =
+				from p in db.Parent.AsOracle().AsOfTimestamp(timestamp)
+				select p;
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring(" AS OF TIMESTAMP "));
+		}
+
+		[Test]
+		public void AsOfSCNTest([IncludeDataSources(true, TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			long scn = 1234567;
+			var q =
+				from p in db.Parent.AsOracle().AsOfSCN(scn)
+				select p;
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring(" AS OF SCN "));
+		}
+
+		[Test]
+		public void AsOfTimestampWithJoinTest([IncludeDataSources(true, TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var timestamp = DateTime.Now;
+			var q =
+				from p in db.Parent.AsOracle().AsOfTimestamp(timestamp)
+				from c in db.Child
+				where p.ParentID == c.ParentID
+				select p;
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring(" AS OF TIMESTAMP "));
+		}
+
+		#endregion
 	}
 }

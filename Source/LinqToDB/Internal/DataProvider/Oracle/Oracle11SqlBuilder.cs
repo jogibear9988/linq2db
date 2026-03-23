@@ -1,4 +1,6 @@
-﻿using LinqToDB.DataProvider;
+﻿using System.Linq;
+
+using LinqToDB.DataProvider;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
@@ -31,6 +33,23 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 				SqlTableType.Function => $"TABLE({name})",
 				_ => name,
 			};
+		}
+
+		protected override void BuildTableNameExtensions(SqlTable table)
+		{
+			var ext = table.SqlQueryExtensions?.LastOrDefault(e => e.Scope == Sql.QueryExtensionScope.TableNameHint);
+
+			if (ext is { BuilderType: not null })
+			{
+				var extensionBuilder = GetExtensionBuilder(ext.BuilderType);
+
+				switch (extensionBuilder)
+				{
+					case ISqlQueryExtensionBuilder queryExtensionBuilder:
+						queryExtensionBuilder.Build(NullabilityContext, this, StringBuilder, ext);
+						break;
+				}
+			}
 		}
 	}
 }
